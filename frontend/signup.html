@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up - Jayam Todo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #667eea;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input.error {
+      border-color: #e74c3c;
+    }
+
+    .password-strength {
+      margin-top: 5px;
+      font-size: 12px;
+      height: 4px;
+      border-radius: 2px;
+      background: #e0e0e0;
+      overflow: hidden;
+    }
+
+    .strength-bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .strength-weak {
+      width: 33%;
+      background: #e74c3c;
+    }
+
+    .strength-medium {
+      width: 66%;
+      background: #f39c12;
+    }
+
+    .strength-strong {
+      width: 100%;
+      background: #27ae60;
+    }
+
+    .btn-signup {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.2s;
+    }
+
+    .btn-signup:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-signup:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      color: #e74c3c;
+      background: #fadbd8;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .success-msg {
+      color: #27ae60;
+      background: #d5f4e6;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .password-requirements {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      padding: 8px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .password-requirements.show {
+      display: block;
+    }
+
+    .requirement {
+      margin: 3px 0;
+    }
+
+    .requirement.met {
+      color: #27ae60;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>✨ Jayam Todo</h1>
+    <p>Start organizing your tasks today</p>
+  </div>
+
+  <div id="errorMsg" class="error-msg"></div>
+  <div id="successMsg" class="success-msg"></div>
+
+  <form onsubmit="handleSignup(event)">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input id="username" type="text" placeholder="Choose a username" required>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input id="email" type="email" placeholder="Enter your email" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Create a strong password" oninput="checkPasswordStrength()" required>
+      <div class="password-strength">
+        <div class="strength-bar" id="strengthBar"></div>
+      </div>
+      <div class="password-requirements" id="requirements">
+        <div class="requirement" id="req-length">✗ At least 6 characters</div>
+        <div class="requirement" id="req-uppercase">✗ At least one uppercase letter</div>
+        <div class="requirement" id="req-number">✗ At least one number</div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-signup" id="signupBtn">Create Account</button>
+  </form>
+
+  <div class="login-link">
+    Already have an account? <a href="login.html">Sign in here</a>
+  </div>
+</div>
+
+<script>
+function checkPasswordStrength() {
+  const password = document.getElementById("password").value;
+  const strengthBar = document.getElementById("strengthBar");
+  const requirements = document.getElementById("requirements");
+  const reqLength = document.getElementById("req-length");
+  const reqUppercase = document.getElementById("req-uppercase");
+  const reqNumber = document.getElementById("req-number");
+
+  requirements.classList.add("show");
+
+  let strength = 0;
+
+  // Check length
+  if (password.length >= 6) {
+    strength += 33;
+    reqLength.classList.add("met");
+    reqLength.innerHTML = "✓ At least 6 characters";
+  } else {
+    reqLength.classList.remove("met");
+    reqLength.innerHTML = "✗ At least 6 characters";
+  }
+
+  // Check uppercase
+  if (/[A-Z]/.test(password)) {
+    strength += 33;
+    reqUppercase.classList.add("met");
+    reqUppercase.innerHTML = "✓ At least one uppercase letter";
+  } else {
+    reqUppercase.classList.remove("met");
+    reqUppercase.innerHTML = "✗ At least one uppercase letter";
+  }
+
+  // Check number
+  if (/[0-9]/.test(password)) {
+    strength += 34;
+    reqNumber.classList.add("met");
+    reqNumber.innerHTML = "✓ At least one number";
+  } else {
+    reqNumber.classList.remove("met");
+    reqNumber.innerHTML = "✗ At least one number";
+  }
+
+  // Update strength bar
+  strengthBar.className = "strength-bar";
+  if (strength > 0 && strength <= 33) {
+    strengthBar.classList.add("strength-weak");
+  } else if (strength > 33 && strength <= 66) {
+    strengthBar.classList.add("strength-medium");
+  } else if (strength > 66) {
+    strengthBar.classList.add("strength-strong");
+  }
+
+  strengthBar.style.width = strength + "%";
+}
+
+async function handleSignup(event) {
+  event.preventDefault();
+
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const errorMsg = document.getElementById("errorMsg");
+  const successMsg = document.getElementById("successMsg");
+  const signupBtn = document.getElementById("signupBtn");
+
+  // Clear previous messages
+  errorMsg.style.display = "none";
+  successMsg.style.display = "none";
+
+  // Validate inputs
+  if (!username || !email || !password) {
+    showError("Please fill in all fields");
+    return;
+  }
+
+  if (username.length < 3) {
+    showError("Username must be at least 3 characters");
+    return;
+  }
+
+  if (password.length < 6) {
+    showError("Password must be at least 6 characters");
+    return;
+  }
+
+  if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+    showError("Password must contain uppercase letter and number");
+    return;
+  }
+
+  // Disable button during signup
+  signupBtn.disabled = true;
+  signupBtn.innerHTML = '<span class="loading"></span> Creating account...';
+
+  try {
+    const res = await fetch("http://localhost:5000/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.status === 200 || data.message.includes("Verification email sent")) {
+      showSuccess("Account created! Check your email to verify. Redirecting to login...");
+      
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 3000);
+    } else {
+      showError(data.message || "Signup failed. Please try again.");
+      signupBtn.disabled = false;
+      signupBtn.innerHTML = "Create Account";
+    }
+  } catch (error) {
+    console.error("Signup error:", error);
+    showError("Connection error. Please try again.");
+    signupBtn.disabled = false;
+    signupBtn.innerHTML = "Create Account";
+  }
+}
+
+function showError(message) {
+  const errorMsg = document.getElementById("errorMsg");
+  errorMsg.innerText = message;
+  errorMsg.style.display = "block";
+}
+
+function showSuccess(message) {
+  const successMsg = document.getElementById("successMsg");
+  successMsg.innerText = message;
+  successMsg.style.display = "block";
+}
+</script>
+
+</body>
+</html>
