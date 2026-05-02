@@ -210,7 +210,7 @@
 
 <div class="container">
   <div class="header">
-    <h1>✨ Jayam Todo</h1>
+    <h1>✨ Sakthi Todo</h1>
     <p>Start organizing your tasks today</p>
   </div>
 
@@ -239,6 +239,11 @@
         <div class="requirement" id="req-uppercase">✗ At least one uppercase letter</div>
         <div class="requirement" id="req-number">✗ At least one number</div>
       </div>
+    </div>
+
+    <div class="form-group">
+      <label for="confirmPassword">Confirm Password</label>
+      <input id="confirmPassword" type="password" placeholder="Re-enter your password" required>
     </div>
 
     <button type="submit" class="btn-signup" id="signupBtn">Create Account</button>
@@ -311,6 +316,7 @@ async function handleSignup(event) {
   const username = document.getElementById("username").value.trim();
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
   const errorMsg = document.getElementById("errorMsg");
   const successMsg = document.getElementById("successMsg");
   const signupBtn = document.getElementById("signupBtn");
@@ -320,7 +326,7 @@ async function handleSignup(event) {
   successMsg.style.display = "none";
 
   // Validate inputs
-  if (!username || !email || !password) {
+  if (!username || !email || !password || !confirmPassword) {
     showError("Please fill in all fields");
     return;
   }
@@ -340,6 +346,11 @@ async function handleSignup(event) {
     return;
   }
 
+  if (password !== confirmPassword) {
+    showError("Passwords do not match");
+    return;
+  }
+
   // Disable button during signup
   signupBtn.disabled = true;
   signupBtn.innerHTML = '<span class="loading"></span> Creating account...';
@@ -350,17 +361,17 @@ async function handleSignup(event) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ username, email, password })
+      body: JSON.stringify({ username, email, password, confirmPassword })
     });
 
     const data = await res.json();
 
-    if (res.status === 200 || data.message.includes("Verification email sent")) {
-      showSuccess("Account created! Check your email to verify. Redirecting to login...");
+    if (res.status === 201 || res.status === 200) {
+      showSuccess("Account created successfully! Redirecting to login...");
       
       setTimeout(() => {
         window.location.href = "login.html";
-      }, 3000);
+      }, 2500);
     } else {
       showError(data.message || "Signup failed. Please try again.");
       signupBtn.disabled = false;

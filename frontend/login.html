@@ -168,7 +168,7 @@
   </form>
 
   <div class="signup-link">
-    New to Jayam Todo? <a href="signup.html">Create an account</a>
+    New to Sakthi Todo? <a href="signup.html">Create an account</a>
   </div>
 </div>
 
@@ -207,13 +207,14 @@ async function handleLogin(event) {
 
     const data = await res.json();
 
-    if (res.status === 200 && data.message === "Login success") {
-      // Store user data in localStorage
-      localStorage.setItem("userId", data.userId);
-      localStorage.setItem("username", data.username);
-      localStorage.setItem("email", data.email);
-      localStorage.setItem("createdAt", data.createdAt);
-      localStorage.setItem("loginStreak", data.loginStreak);
+    if (res.status === 200 && data.message === "Login successful") {
+      // Store JWT token
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("username", data.user.username);
+      localStorage.setItem("email", data.user.email);
+      localStorage.setItem("createdAt", data.user.createdAt);
+      localStorage.setItem("loginStreak", data.user.loginStreak || 0);
 
       showSuccess("Login successful! Redirecting...");
       

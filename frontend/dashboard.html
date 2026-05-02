@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dashboard - Jayam Todo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Todo App</title>
   <style>
     * {
       margin: 0;
@@ -703,17 +705,7 @@
       </div>
     </div>
 
-    <div class="calendar">
-      <div class="calendar-header">
-        <h3>📅 Login Calendar</h3>
-        <div>
-          <button class="btn-secondary" onclick="previousMonth()" style="padding: 6px 12px; font-size: 12px;">←</button>
-          <span id="monthYear" style="margin: 0 10px;"></span>
-          <button class="btn-secondary" onclick="nextMonth()" style="padding: 6px 12px; font-size: 12px;">→</button>
-        </div>
-      </div>
-      <div id="calendarGrid" class="calendar-grid"></div>
-    </div>
+
   </div>
 
   <!-- TASKS SECTION -->
@@ -742,6 +734,15 @@
       <div class="form-group">
         <label for="taskInput">New Task</label>
         <input id="taskInput" type="text" placeholder="What do you want to accomplish?">
+      </div>
+
+      <div class="form-group">
+        <label for="taskPriority">Priority</label>
+        <select id="taskPriority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
       </div>
 
       <div class="form-group">
@@ -799,9 +800,51 @@
   <!-- CALENDAR SECTION -->
   <div id="calendar" class="section">
     <div class="card">
-      <h2>📅 Login Calendar</h2>
-      <p style="margin-bottom: 20px; color: #666;">Track your login consistency and build your streak!</p>
-      <div id="fullCalendar"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+          <h2 style="display: inline-block; margin: 0;">📅 Calendar & Streaks</h2>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 32px; font-weight: bold; color: #ffd369;">🔥 <span id="calendarStreak">0</span></div>
+          <div style="color: #666; font-size: 12px;">Day Streak</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 10px;">
+          <div style="font-size: 14px; opacity: 0.9;">Total Tasks Created</div>
+          <div style="font-size: 32px; font-weight: bold; margin-top: 10px;" id="statsTasksCreated">0</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #27ae60, #229954); color: white; padding: 20px; border-radius: 10px;">
+          <div style="font-size: 14px; opacity: 0.9;">Tasks Completed This Month</div>
+          <div style="font-size: 32px; font-weight: bold; margin-top: 10px;" id="statsTasksCompleted">0</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="margin: 0; color: #333;">Month View</h3>
+          <div>
+            <button class="btn-secondary" onclick="previousCalendarMonth()" style="padding: 6px 12px; font-size: 12px; margin-right: 5px;">←</button>
+            <span id="calendarMonthYear" style="margin: 0 15px; font-weight: bold; min-width: 150px; text-align: center; display: inline-block;"></span>
+            <button class="btn-secondary" onclick="nextCalendarMonth()" style="padding: 6px 12px; font-size: 12px;">→</button>
+          </div>
+        </div>
+        
+        <div class="calendar">
+          <div id="fullCalendar" class="calendar-grid"></div>
+        </div>
+      </div>
+
+      <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <h4 style="margin-top: 0;">📊 Legend:</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+          <div><span style="display: inline-block; width: 20px; height: 20px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 3px; margin-right: 8px; vertical-align: middle;"></span>Login Day</div>
+          <div><span style="display: inline-block; width: 20px; height: 20px; background: #f9f9f9; border: 2px solid #f39c12; border-radius: 3px; margin-right: 8px; vertical-align: middle;"></span>Tasks Pending</div>
+          <div><span style="display: inline-block; width: 20px; height: 20px; background: #f9f9f9; border: 3px solid #27ae60; border-radius: 3px; margin-right: 8px; vertical-align: middle;"></span>All Tasks Done</div>
+          <div><span style="display: inline-block; width: 20px; height: 20px; background: #e8f5e9; border-radius: 3px; margin-right: 8px; vertical-align: middle;"></span>Today</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -817,6 +860,14 @@
       <textarea id="editTaskInput" placeholder="Edit task"></textarea>
     </div>
     <div class="form-group">
+      <label>Priority</label>
+      <select id="editTaskPriority">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label>Deadline</label>
       <input id="editTaskDeadline" type="datetime-local">
     </div>
@@ -826,19 +877,55 @@
 </div>
 
 <script>
-const API = "http://localhost:5000/tasks";
 let currentEditTaskId = null;
-let loginDates = [];
-let currentMonth = new Date();
+let calendarMonth = new Date();
 let allTasks = [];
+let currentUser = null;
+let userId = localStorage.getItem("userId");
+const token = localStorage.getItem("token");
+const API_BASE = "http://localhost:5000";
+const TASKS_API = `${API_BASE}/tasks`;
+const USER_API = `${API_BASE}/auth`;
+
+// Add auth header helper
+const authHeaders = {
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${token}`
+};
 
 // Initialize
-window.addEventListener("DOMContentLoaded", function() {
-  loadUserData();
+window.addEventListener("DOMContentLoaded", async function() {
+  if (!userId || !token) {
+    alert("Please login first");
+    window.location.href = "login.html";
+    return;
+  }
+
+  await fetchUserProfile();
   setDarkModeFromStorage();
-  fetchTasks();
+  await fetchTasks();
   renderCalendar();
 });
+
+async function fetchUserProfile() {
+  try {
+    const res = await fetch(`${USER_API}/me`, { headers: authHeaders });
+    if (!res.ok) {
+      throw new Error("Failed to load user profile");
+    }
+
+    currentUser = await res.json();
+    localStorage.setItem("username", currentUser.username);
+    localStorage.setItem("email", currentUser.email);
+    localStorage.setItem("createdAt", currentUser.createdAt);
+    localStorage.setItem("loginStreak", currentUser.loginStreak || 0);
+
+    loadUserData();
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    loadUserData();
+  }
+}
 
 // Load user data from localStorage
 function loadUserData() {
@@ -857,20 +944,16 @@ function loadUserData() {
 
 // Show/Hide sections
 function showSection(sectionId, event) {
-  // Hide all sections
   document.querySelectorAll(".section").forEach(section => {
     section.classList.remove("active");
   });
 
-  // Clear active state from nav buttons
   document.querySelectorAll(".nav-buttons button").forEach(btn => {
     btn.classList.remove("active");
   });
 
-  // Show selected section
   document.getElementById(sectionId).classList.add("active");
 
-  // Mark clicked button as active when available
   if (event && event.currentTarget) {
     event.currentTarget.classList.add("active");
   }
@@ -879,7 +962,7 @@ function showSection(sectionId, event) {
 // TASKS MANAGEMENT
 async function fetchTasks() {
   try {
-    const res = await fetch(API);
+    const res = await fetch(TASKS_API, { headers: authHeaders });
     if (!res.ok) throw new Error("Failed to fetch tasks");
     
     const data = await res.json();
@@ -895,6 +978,7 @@ async function fetchTasks() {
     checkReminders(data);
   } catch (error) {
     console.error("Error fetching tasks:", error);
+    showMessage("tasks", "Failed to load tasks", "error");
   }
 }
 
@@ -915,17 +999,23 @@ function renderTasks(tasks) {
 
     const displayedDeadline = task.deadline ? new Date(task.deadline).toLocaleString() : "No deadline";
     const overdueTag = isOverdue ? " <span style='color: #e74c3c;'>(Overdue)</span>" : "";
+    
+    // Priority badge
+    let priorityColor = "#27ae60"; // low
+    if (task.priority === "medium") priorityColor = "#f39c12";
+    if (task.priority === "high") priorityColor = "#e74c3c";
+    const priorityBadge = `<span style="background: ${priorityColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px; vertical-align: middle;">${task.priority ? task.priority.toUpperCase() : 'MEDIUM'}</span>`;
 
     li.innerHTML = `
       <div class="task-info">
-        <div class="task-title">${task.title}</div>
+        <div class="task-title">${task.title} ${priorityBadge}</div>
         <div class="task-deadline">${displayedDeadline}${overdueTag}</div>
       </div>
       <div class="task-actions">
         <button class="btn-complete" onclick="toggleTask('${task._id}', ${task.completed})">
           ${task.completed ? "↩️ Undo" : "✅ Done"}
         </button>
-        <button class="btn-edit" onclick="editTask('${task._id}', ${JSON.stringify(task.title)}, ${JSON.stringify(task.deadline ? new Date(task.deadline).toISOString().slice(0,16) : "")})">✏️ Edit</button>
+        <button class="btn-edit" onclick="editTask('${task._id}', ${JSON.stringify(task.title)}, ${JSON.stringify(task.deadline ? new Date(task.deadline).toISOString().slice(0,16) : "")}, '${task.priority || 'medium'}')">✏️ Edit</button>
         <button class="btn-delete" onclick="deleteTask('${task._id}')">🗑️ Delete</button>
       </div>
     `;
@@ -1033,6 +1123,7 @@ function notifyReminder(title, body) {
 
 async function addTask() {
   const title = document.getElementById("taskInput").value.trim();
+  const priority = document.getElementById("taskPriority").value;
   const deadline = document.getElementById("taskDeadline").value;
 
   if (!title) {
@@ -1041,27 +1132,38 @@ async function addTask() {
   }
 
   try {
-    const res = await fetch(API + "/add", {
+    const res = await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, deadline })
+      headers: authHeaders,
+      body: JSON.stringify({ title, priority, deadline })
     });
 
     if (res.ok) {
       document.getElementById("taskInput").value = "";
+      document.getElementById("taskPriority").value = "medium";
       document.getElementById("taskDeadline").value = "";
       showMessage("tasks", "Task added successfully! 🎉", "success");
+      
+      const taskObj = await res.json();
+      if(Notification.permission === "granted") {
+        new Notification("New Task Created", { body: title });
+      }
+      
       fetchTasks();
+    } else {
+      const data = await res.json();
+      showMessage("tasks", data.message || "Failed to add task", "error");
     }
   } catch (error) {
     console.error("Error adding task:", error);
-    showMessage("tasks", "Failed to add task", "error");
+    showMessage("tasks", "Connection error: " + error.message, "error");
   }
 }
 
-function editTask(id, title, deadline) {
+function editTask(id, title, deadline, priority) {
   currentEditTaskId = id;
   document.getElementById("editTaskInput").value = title;
+  document.getElementById("editTaskPriority").value = priority || "medium";
   document.getElementById("editTaskDeadline").value = deadline || "";
   document.getElementById("editModal").classList.add("active");
 }
@@ -1073,6 +1175,7 @@ function closeEditModal() {
 
 async function saveEditedTask() {
   const newTitle = document.getElementById("editTaskInput").value.trim();
+  const newPriority = document.getElementById("editTaskPriority").value;
   const newDeadline = document.getElementById("editTaskDeadline").value;
 
   if (!newTitle) {
@@ -1081,34 +1184,40 @@ async function saveEditedTask() {
   }
 
   try {
-    const res = await fetch(API + "/" + currentEditTaskId, {
+    const res = await fetch(`${API}/${currentEditTaskId}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTitle, deadline: newDeadline || null })
+      headers: authHeaders,
+      body: JSON.stringify({ title: newTitle, priority: newPriority, deadline: newDeadline || null })
     });
 
     if (res.ok) {
       closeEditModal();
       fetchTasks();
+    } else {
+      showMessage("tasks", "Failed to update task", "error");
     }
   } catch (error) {
     console.error("Error updating task:", error);
+    showMessage("tasks", "Connection error", "error");
   }
 }
 
 async function toggleTask(id, status) {
   try {
-    const res = await fetch(API + "/" + id, {
+    const res = await fetch(`${API}/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders,
       body: JSON.stringify({ completed: !status })
     });
 
     if (res.ok) {
       fetchTasks();
+    } else {
+      showMessage("tasks", "Failed to update task", "error");
     }
   } catch (error) {
     console.error("Error toggling task:", error);
+    showMessage("tasks", "Connection error", "error");
   }
 }
 
@@ -1116,21 +1225,26 @@ async function deleteTask(id) {
   if (!confirm("Are you sure you want to delete this task?")) return;
 
   try {
-    const res = await fetch(API + "/" + id, { method: "DELETE" });
+    const res = await fetch(`${API}/${id}`, { 
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
 
     if (res.ok) {
       showMessage("tasks", "Task deleted! 🗑️", "success");
       fetchTasks();
+    } else {
+      showMessage("tasks", "Failed to delete task", "error");
     }
   } catch (error) {
     console.error("Error deleting task:", error);
+    showMessage("tasks", "Connection error", "error");
   }
 }
 
 // ACCOUNT MANAGEMENT
 async function updateUsername() {
   const newUsername = document.getElementById("newUsername").value.trim();
-  const userId = localStorage.getItem("userId");
 
   if (!userId) {
     showMessage("account", "Please login again before updating your profile", "error");
@@ -1148,7 +1262,6 @@ async function updateUsername() {
   }
 
   try {
-    const userId = localStorage.getItem("userId");
     const res = await fetch("http://localhost:5000/auth/update/" + userId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -1191,7 +1304,6 @@ async function updatePassword() {
   }
 
   try {
-    const userId = localStorage.getItem("userId");
     const res = await fetch("http://localhost:5000/auth/update/" + userId, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -1224,20 +1336,33 @@ function showMessage(section, message, type) {
   }, 4000);
 }
 
-// CALENDAR
-function renderCalendar() {
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
+// CALENDAR - Shows task deadlines and login days
 
-  document.getElementById("monthYear").innerText = new Date(year, month).toLocaleDateString('en-US', {
+function renderCalendar() {
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+
+  document.getElementById("calendarMonthYear").innerText = new Date(year, month).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric'
   });
 
-  const grid = document.getElementById("calendarGrid");
+  document.getElementById("calendarStreak").innerText = localStorage.getItem("loginStreak") || 0;
+
+  // Update stats
+  const completedThisMonth = allTasks.filter(t => {
+    if (!t.completed) return false;
+    const completedDate = new Date(t.updatedAt || t.createdAt);
+    return completedDate.getMonth() === month && completedDate.getFullYear() === year;
+  }).length;
+
+  document.getElementById("statsTasksCreated").innerText = allTasks.length;
+  document.getElementById("statsTasksCompleted").innerText = completedThisMonth;
+
+  const grid = document.getElementById("fullCalendar");
   grid.innerHTML = "";
 
-  // Add day headers
+  // Day headers
   const dayHeaders = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   dayHeaders.forEach(day => {
     const header = document.createElement("div");
@@ -1249,7 +1374,7 @@ function renderCalendar() {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Add empty cells
+  // Empty cells
   for (let i = 0; i < firstDay; i++) {
     const emptyDay = document.createElement("div");
     emptyDay.className = "day";
@@ -1257,37 +1382,92 @@ function renderCalendar() {
     grid.appendChild(emptyDay);
   }
 
-  // Add days
+  // Day cells
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const createdDate = new Date(localStorage.getItem("createdAt"));
+  createdDate.setHours(0, 0, 0, 0);
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEl = document.createElement("div");
     dayEl.className = "day";
-    dayEl.innerText = day;
-
+    
     const dateToCheck = new Date(year, month, day);
     dateToCheck.setHours(0, 0, 0, 0);
 
-    // Check if date is today or before today and after creation
-    if (dateToCheck.toDateString() === today.toDateString()) {
-      dayEl.classList.add("active");
-    } else if (dateToCheck < today && dateToCheck >= createdDate) {
-      dayEl.classList.add("active");
+    // Check for tasks on this day
+    const tasksOnDay = allTasks.filter(task => {
+      if (!task.deadline) return false;
+      const taskDate = new Date(task.deadline);
+      return taskDate.getDate() === day && 
+             taskDate.getMonth() === month && 
+             taskDate.getFullYear() === year;
+    });
+
+    // Check if login day
+    const isLoginDay = (dateToCheck.getTime() === today.getTime()) || 
+                       (dateToCheck < today && dateToCheck >= createdDate);
+
+    // Style based on content
+    if (isLoginDay) {
+      dayEl.style.background = "linear-gradient(135deg, #667eea, #764ba2)";
+      dayEl.style.color = "white";
+      dayEl.style.fontWeight = "bold";
+    } else if (dateToCheck.getTime() === today.getTime()) {
+      dayEl.style.background = "#e8f5e9";
+      dayEl.style.border = "2px solid #27ae60";
     }
+
+    if (tasksOnDay.length > 0) {
+      const completedCount = tasksOnDay.filter(t => t.completed).length;
+      if (completedCount === tasksOnDay.length) {
+        dayEl.style.borderBottom = "3px solid #27ae60";
+      } else {
+        dayEl.style.borderBottom = "3px solid #f39c12";
+      }
+    }
+
+    dayEl.innerHTML = `<div style="font-size: 14px; font-weight: bold;">${day}</div>`;
+    
+    if (tasksOnDay.length > 0) {
+      const completedCount = tasksOnDay.filter(t => t.completed).length;
+      dayEl.innerHTML += `<div style="font-size: 10px; opacity: 0.8;">${completedCount}/${tasksOnDay.length}</div>`;
+    }
+
+    dayEl.style.cursor = "pointer";
+    dayEl.addEventListener("click", () => {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      filterTasksByDate(dateStr);
+    });
 
     grid.appendChild(dayEl);
   }
 }
 
-function previousMonth() {
-  currentMonth.setMonth(currentMonth.getMonth() - 1);
+function previousCalendarMonth() {
+  calendarMonth.setMonth(calendarMonth.getMonth() - 1);
   renderCalendar();
 }
 
-function nextMonth() {
-  currentMonth.setMonth(currentMonth.getMonth() + 1);
+function nextCalendarMonth() {
+  calendarMonth.setMonth(calendarMonth.getMonth() + 1);
   renderCalendar();
+}
+
+function filterTasksByDate(dateStr) {
+  const tasksOnDate = allTasks.filter(task => {
+    if (!task.deadline) return false;
+    const taskDate = new Date(task.deadline).toISOString().split('T')[0];
+    return taskDate === dateStr;
+  });
+
+  if (tasksOnDate.length === 0) {
+    showMessage("tasks", `No tasks scheduled for ${new Date(dateStr).toLocaleDateString()}`, "error");
+    return;
+  }
+
+  showSection("tasks", null);
+  renderTasks(tasksOnDate);
 }
 
 // LOGOUT
